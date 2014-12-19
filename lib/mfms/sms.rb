@@ -8,6 +8,7 @@ module Rapporto
   class SMS
 
     attr_accessor :phone, :subject, :message
+    attr_accessor :id
 
     def initialize(phone, subject, message, translit = @@translit)
       @phone = phone
@@ -29,10 +30,12 @@ module Rapporto
       self.class.establish_connection.start do |http|
         request = Net::HTTP::Get.new(send_url)
         response = http.request(request)
-        body = response.body.split(';')
-        return body[0] unless body[0] == 'ok'
-        @status = 'sent'
-        @id = body[2]
+        response_text = response.body.strip
+        if response_text =~ /^\d+$/
+          @id = response_text
+        else
+          raise StandardError, response_text
+        end
       end
     end
 
